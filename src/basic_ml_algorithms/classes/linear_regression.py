@@ -8,10 +8,10 @@ class MyLineReg:
     """ Linear regression
     """
     def __init__(
-        self,
-        n_iter: int = 100,
-        learning_rate: float = 0.1,
-        weights: np.array = None
+            self,
+            n_iter: int = 100,
+            learning_rate: float = 0.1,
+            weights: np.array = None
     ) -> None:
         self.n_iter = n_iter
         self.learning_rate = learning_rate
@@ -21,10 +21,10 @@ class MyLineReg:
         return f'MyLineReg class: n_iter={self.n_iter}, learning_rate={self.learning_rate}'
 
     def fit(
-        self,
-        X: pd.DataFrame,
-        y: pd.Series,
-        verbose: int = False
+            self,
+            X: pd.DataFrame,
+            y: pd.Series,
+            verbose: int = False
     ) -> None:
         if not {'w0'}.issubset(X.columns):
             X.insert(0, 'w0', 1)
@@ -44,6 +44,15 @@ class MyLineReg:
             iteration += 1
 
     def get_coef(
-        self
+            self
     ) -> np.array:
         return self.weights[1:]
+
+    def predict(
+            self,
+            X: pd.DataFrame
+    ) -> np.array:
+        if not {'w0'}.issubset(X.columns):
+            X.insert(0, 'w0', 1)
+        X = X.to_numpy()
+        return np.dot(X, self.weights)
