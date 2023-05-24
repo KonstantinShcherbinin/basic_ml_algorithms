@@ -26,11 +26,22 @@ class MyLineReg:
         y: pd.Series,
         verbose: int = False
     ) -> None:
-        X.insert(0, 'w0', 1)
-        self.weights = np.ones((1, X.columns.__len__()))
+        if not {'w0'}.issubset(X.columns):
+            X.insert(0, 'w0', 1)
+        self.weights = np.ones((X.columns.__len__(), 1))
         X = X.to_numpy()
-        y = y.to_numpy()
-        np.dot(X, y)
+        y = np.resize(y, (len(y), 1))
+        iteration = 1
+        while iteration <= self.n_iter:
+            predicted = np.array(np.dot(X, self.weights))
+            gradient = (2/len(predicted)) * np.dot(X.T, (predicted - y))
+            self.weights = self.weights - self.learning_rate * gradient
+            if verbose:
+                if iteration == 1:
+                    print(f'start | loss: {gradient}')
+                if iteration % verbose == 0:
+                    print(f'{iteration} | loss: {gradient}')
+            iteration += 1
 
     def get_coef(
         self
