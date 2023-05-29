@@ -65,20 +65,25 @@ class MyLineReg:
                 l2_weights if self.reg == 'l2' else \
                 l1_weights + l2_weights if self.reg == 'elasticnet' else 0
             gradient = (2/len(predicted)) * np.dot(X.T, (predicted - y)) + reg_weights
-            self.weights -= self.learning_rate * gradient
+            if isinstance(self.learning_rate, float):
+                dynamic_lr = self.learning_rate
+                self.weights -= dynamic_lr * gradient
+            else:
+                dynamic_lr = self.learning_rate(iteration)
+                self.weights -= dynamic_lr * gradient
             #err = metric_calc(y, predicted, self.metric)
             self.err = MyLineReg.metric_calc(y, np.array(np.dot(X, self.weights)), self.metric)
             if verbose:
                 if self.metric:
                     if iteration == 1:
-                        print(f'start | loss: {gradient} | {self.metric}: {self.err}')
+                        print(f'start | loss: {gradient} | {self.metric}: {self.err} | learning_rate: {dynamic_lr}')
                     if iteration % verbose == 0:
-                        print(f'{iteration} | loss: {gradient} | {self.metric}: {self.err}')
+                        print(f'{iteration} | loss: {gradient} | {self.metric}: {self.err} | learning_rate: {dynamic_lr}')
                 else:
                     if iteration == 1:
-                        print(f'start | loss: {gradient}')
+                        print(f'start | loss: {gradient} | learning_rate: {dynamic_lr}')
                     if iteration % verbose == 0:
-                        print(f'{iteration} | loss: {gradient}')
+                        print(f'{iteration} | loss: {gradient} | learning_rate: {dynamic_lr}')
             iteration += 1
 
     def get_coef(
