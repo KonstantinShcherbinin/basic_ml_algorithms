@@ -11,6 +11,7 @@ class MyLineReg:
     """ Linear regression
     """
     metric_list = ['mae', 'mse', 'rmse', 'mape', 'r2']
+    regularization_list = ['l1', 'l2', 'elasticnet']
 
     def __init__(
             self,
@@ -18,15 +19,23 @@ class MyLineReg:
             learning_rate: float = 0.1,
             weights: Optional[np.array] = None,
             metric: Optional[str] = None,
-            err: Optional[float] = None
+            err: Optional[float] = None,
+            reg: Optional[str] = None,
+            l1_coef: Optional[float] = 0,
+            l2_coef: Optional[float] = 0
     ) -> None:
         self.n_iter = n_iter
         self.learning_rate = learning_rate
         self.weights = weights
-        if metric not in MyLineReg.metric_list:
+        if metric and metric not in MyLineReg.metric_list:
             raise ValueError(f"{metric}-metric isn't in the list of available values")
         self.metric = metric
         self.err = err
+        if reg and reg not in MyLineReg.regularization_list:
+            raise ValueError(f"Regularization-type - {reg} isn't in the list of available values")
+        self.reg = reg
+        self.l1_coef = l1_coef
+        self.l2_coef = l2_coef
 
     def __str__(self) -> str:
         return f'MyLineReg class: n_iter={self.n_iter}, \
@@ -46,10 +55,19 @@ class MyLineReg:
         iteration = 1
         while iteration <= self.n_iter:
             predicted = np.array(np.dot(X, self.weights))
+            sgn = self.weights.copy()
+            sgn = np.where(sgn < 0, -1, sgn)
+            sgn = np.where(sgn > 0, 1, sgn)
+            sgn = np.where(sgn == 0, 0, sgn)
+            l1_weights = self.l1_coef * sgn
+            l2_weights = self.l2_coef * self.weights * 2
+            reg_weights = l1_weights if self.reg == 'l1' else \
+                l2_weights if self.reg == 'l2' else \
+                l1_weights + l2_weights if self.reg == 'elasticnet' else 0
+            gradient = (2/len(predicted)) * np.dot(X.T, (predicted - y)) + reg_weights
+            self.weights -= self.learning_rate * gradient
             #err = metric_calc(y, predicted, self.metric)
-            self.err = MyLineReg.metric_calc(y, predicted, self.metric)
-            gradient = (2/len(predicted)) * np.dot(X.T, (predicted - y))
-            self.weights = self.weights - self.learning_rate * gradient
+            self.err = MyLineReg.metric_calc(y, np.array(np.dot(X, self.weights)), self.metric)
             if verbose:
                 if self.metric:
                     if iteration == 1:
